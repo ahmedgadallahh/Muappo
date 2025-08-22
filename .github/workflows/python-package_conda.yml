@@ -1,34 +1,45 @@
-name: Python Package using Conda
+name: Build Python App to APK
 
 on: [push]
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-    - name: Add conda to system path
+
+    - name: Install dependencies with conda
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
-      run: |
-        conda env update --file environment.yml --name base
+        if [ -f environment.yml ]; then
+          conda env update --file environment.yml --name base
+        fi
+        pip install buildozer Cython kivy kivymd
+
     - name: Lint with flake8
       run: |
-        conda install flake8
-        # stop the build if there are Python syntax errors or undefined names
+        conda install -y flake8
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Test with pytest
       run: |
-        conda install pytest
+        conda install -y pytest
         pytest
+
+    - name: Build APK with Buildozer
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y zip unzip openjdk-17-jdk
+        buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-android-app
+        path: ./bin/*.apk
