@@ -1,0 +1,14 @@
+name: base
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - flake8
+  - pytest
+  - cython
+  - openjdk=17
+  - pip:
+      - buildozer
+      - kivy
