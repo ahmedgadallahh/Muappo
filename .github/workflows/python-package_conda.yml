@@ -10,11 +10,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Disable BuildKit
-        run: echo '{"features":{"buildkit":false}}' | sudo tee /etc/docker/daemon.json
-
-      - name: Restart Docker
-        run: sudo systemctl restart docker
+      - name: Disable Docker BuildKit
+        run: |
+          echo "DOCKER_BUILDKIT=0" | sudo tee -a /etc/environment
+          echo "COMPOSE_DOCKER_CLI_BUILD=0" | sudo tee -a /etc/environment
+          export DOCKER_BUILDKIT=0
+          export COMPOSE_DOCKER_CLI_BUILD=0
 
       - name: Build APK with Buildozer Docker
         run: |
