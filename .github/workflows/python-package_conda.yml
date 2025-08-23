@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Disable BuildKit
-        run: echo '{"features":{"buildkit": false}}' | sudo tee /etc/docker/daemon.json
+        run: echo '{"features":{"buildkit":false}}' | sudo tee /etc/docker/daemon.json
 
       - name: Restart Docker
         run: sudo systemctl restart docker
