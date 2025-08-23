@@ -37,15 +37,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y zip unzip openjdk-17-jdk wget
 
-        # Install Android SDK + build-tools
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+        # Install Android SDK + build-tools in path Buildozer expects
+        mkdir -p ~/.buildozer/android/platform
+        cd ~/.buildozer/android/platform
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip -d cmdline-tools
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
-        export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        mkdir -p android-sdk/cmdline-tools/latest
+        mv cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH
 
         yes | sdkmanager --licenses
         sdkmanager "platform-tools" "platforms;android-33" "build-tools;34.0.0"
