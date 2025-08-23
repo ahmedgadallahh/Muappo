@@ -1,70 +1,28 @@
-name: Build Python App to APK
+name: Build APK with Docker
 
 on: [push]
 
 jobs:
-  build-linux:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Disable BuildKit
+        run: echo '{"features":{"buildkit": false}}' | sudo tee /etc/docker/daemon.json
 
-    - name: Install dependencies with conda
-      run: |
-        if [ -f environment.yml ]; then
-          conda env update --file environment.yml --name base
-        fi
-        pip install buildozer Cython kivy kivymd
+      - name: Restart Docker
+        run: sudo systemctl restart docker
 
-    - name: Lint with flake8
-      run: |
-        pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Build APK with Buildozer Docker
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/home/user/app \
+            kivy/buildozer:latest buildozer android debug
 
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pytest
-
-    - name: Build APK with Buildozer
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y zip unzip openjdk-17-jdk wget
-
-        # Install Android SDK + build-tools in path Buildozer expects
-        mkdir -p ~/.buildozer/android/platform
-        cd ~/.buildozer/android/platform
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d cmdline-tools
-        mkdir -p android-sdk/cmdline-tools/latest
-        mv cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
-
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH
-
-        # --- Fix: provide full cmdline-tools as tools/ ---
-        rm -rf $ANDROID_HOME/tools
-        mkdir -p $ANDROID_HOME
-        cp -r $ANDROID_HOME/cmdline-tools/latest $ANDROID_HOME/tools
-
-        yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "platforms;android-33" "build-tools;34.0.0"
-
-        # Generate buildozer.spec if missing
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
-
-        buildozer -v android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-android-app
-        path: ./bin/*.apk
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-android-app
+          path: bin/*.apk
