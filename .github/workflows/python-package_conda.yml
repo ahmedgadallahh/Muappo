@@ -44,6 +44,11 @@ jobs:
         unzip -q cmdline-tools.zip -d cmdline-tools
         mkdir -p android-sdk/cmdline-tools/latest
         mv cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
+
+        # --- Fix for sdkmanager path ---
+        mkdir -p android-sdk/tools
+        ln -s $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest android-sdk/tools
+
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH
 
